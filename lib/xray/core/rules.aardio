@@ -1,0 +1,89 @@
+//rules 路由规则
+import xray.core;
+namespace xray.core.rules;
+
+var getRulesUrl = function(){
+	var msgDlg = ..win.dlg.message(..mainForm); 
+	var form = msgDlg.create('正在获取路由规则最新版本',,true)
+	form.icon = '\uF1D8';
+	form.progress.startProgress(50); 
+	
+	var url,tag = ..win.invoke(function(){
+    	import process;
+		import inet.http;
+		import web.json;
+		
+		var http = inet.http();
+		var response = http.get("https://api.github.com/repos/Loyalsoldier/v2ray-rules-dat/releases");
+		http.close();
+		if(!response) return;
+		var data = web.json.parse(response)
+		for(k,v in data){
+			// 第一个prerelease不为为false的就是最新的tag
+			if (data[k]['prerelease'] == false) {
+				tag = data[k]['tag_name']
+				break
+			}
+		}		
+		if(!tag) return;
+
+		return "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/" 
+			+ tag + "/rules.zip",tag	
+	});
+	form.close();
+    
+	return url,tag;
+} 	
+
+
+update = function(){
+    ..mainForm.disabled = true; 
+    	
+	var coreDir = ..xray.core.getCoreDir();
+	var url,versionTag = getRulesUrl();
+	if(!url){		
+		..mainForm.disabled = false;
+		return null;
+	}
+	
+	// 全局代理的情况下，不使用加速节点
+	if(..config.proxy.mode != "proxy"){
+		var msgDlg = ..win.dlg.message(..mainForm); 
+		var form = msgDlg.create('正在查询 Github 加速地址',,true);
+		form.icon = '\uF1D8';
+		form.progress.startProgress(50); 
+	
+		url = ..win.invoke(function(url){
+			import xray.githubMirror;
+			return xray.githubMirror.getMirrorUrl(url);
+		},url);
+		form.close();
+		..publish("uiCommand.print","Github加速地址:");
+		..publish("uiCommand.print",url);	
+	}
+	  
+	import fsys;
+	fsys.delete( ..io.fullpath("/temp/rules/") );
+	 
+	import zlib.httpFile;
+	if( ..zlib.httpFile.download(url,"正在下载最新路由规则，版本：" + versionTag
+		,..io.fullpath("/download/")
+		,..io.fullpath("/temp/rules/"),,..mainForm.hwnd) ){
+			..mainForm.disabled = false;
+			
+			if(..io.exist(..io.fullpath("/temp/rules/geoip.dat"))){
+				
+				..io.createDir(coreDir); 
+				fsys.copy(..io.fullpath("/temp/rules/*.*"),coreDir);   
+				return versionTag;
+			}  
+	}
+	else {
+		..mainForm.disabled = false; 
+	} 	 
+}
+
+check = function(){
+	var coreDir = ..xray.core.getCoreDir();
+    if(!..io.exist( ..io.joinpath(coreDir,"geoip.dat") ) ) return update();
+}

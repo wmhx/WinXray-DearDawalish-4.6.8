@@ -1,0 +1,53 @@
+﻿//github 加速节点
+namespace xray.githubMirror{
+	import config;
+	resetgithubMirror = function(){
+		config.githubMirror.mirrors = {};
+		var githubMirror = config.githubMirror.mirrors;
+		..table.push(githubMirror,{"url": "https://cors.isteed.cc/"});
+		..table.push(githubMirror,{"url": "https://hub.gitmirror.com/"});
+		..table.push(githubMirror,{"url": "https://ghproxy.com/"});
+		..table.push(githubMirror,{"url": "https://gh.ddlc.top/"});
+		..table.push(githubMirror,{"url": "https://gh.con.sh/"});
+		..table.push(githubMirror,{"url": "https://ghps.cc/"});
+		config.githubMirror.autoAdd = true;
+		config.githubMirror.save();
+	}
+	
+	getMirrorUrl = function(url){
+		if(!#config.githubMirror.mirrors){
+			resetgithubMirror();
+		}
+	
+		var githubMirrors = config.githubMirror.mirrors;
+		
+		for(mirrorIndex=1;#githubMirrors;1){
+			var selectedUrl = githubMirrors[mirrorIndex]['url']
+			// 域名必须以 / 结尾
+			if(!..string.endWith(selectedUrl,"/",false)){
+				selectedUrl = ..string.concat(selectedUrl,"/")
+			}
+			var mirrorUrl = selectedUrl + url
+			// 测试服务器上文件是否存在
+			import inet.whttp;
+			var whttp = inet.whttp();
+			whttp.beginRequest(mirrorUrl);
+			var re, status = whttp.send();
+			whttp.close();
+			if(status === 200){
+				return mirrorUrl; 
+			}
+			
+			if(mirrorIndex == #githubMirrors){
+					// 兜底返回原始github地址
+					return url; 
+			}
+		}
+	}
+}
+
+/**intellisense(xray.github)
+getMirrorUrl( = 获取github加速url
+getMirrorUrl(.(url) = 原始的github url
+resetgithubMirror( = 重置github加速节点
+end intellisense**/

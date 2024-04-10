@@ -1,0 +1,284 @@
+import win.ui;
+/*DSG{{*/
+var winform = win.form(text="Github加速节点";right=470;bottom=532)
+winform.add(
+autoAddMirrors={cls="checkbox";text="无节点时自动添加默认节点";left=272;top=467;right=455;bottom=488;dr=1;dt=0.88;z=4};
+btnAdd={cls="button";text="添加节点";left=373;top=15;right=447;bottom=41;dr=1;dt=1;z=6};
+btnReset={cls="button";text="重置节点";left=357;top=497;right=444;bottom=519;db=1;dr=1;z=2};
+btnTest={cls="button";text="测试所有节点可用性";left=209;top=496;right=337;bottom=518;db=1;dr=1;z=3};
+mirrors={cls="listview";left=24;top=60;right=446;bottom=448;db=0.16;dl=1;dr=1;dt=0.11;edge=1;fullRow=1;vscroll=1;z=1};
+textMirror={cls="edit";left=25;top=15;right=358;bottom=39;dl=1;dr=0.24;dt=1;edge=1;z=5}
+)
+/*}}*/
+
+import win.ui.minmax;
+win.ui.minmax(winform,450,518);
+
+winform.mirrors.insertColumn("加速节点地址", 300)
+winform.mirrors.insertColumn("状态",-1)
+// 减少闪烁
+winform.mirrors.setExtended(0x10000/*_LVS_EX_DOUBLEBUFFER*/);
+
+import config;
+import win.dlg.message;
+win.dlg.message.install();
+
+var removeMirror = function(selectedItems){
+	if(#selectedItems){
+		for(i=#selectedItems;1;-1){
+			var item = selectedItems[i] 
+			winform.mirrors.delItem(item);
+			table.remove(config.githubMirror.mirrors,item);
+		}
+	}
+}
+
+var clearList = function(){
+	winform.mirrors.clear();
+	config.githubMirror.mirrors = {};
+	config.githubMirror.save();
+}
+
+var acceleratorLock;
+if(config.githubMirror.autoAdd===null){
+	config.githubMirror.autoAdd = true;
+}
+
+// 节点有效性测试
+import thread.manage;
+var manage = thread.manage(10);
+testUrl = function(winform, url, index){
+	var requestUrl = url + "https://github.com/XTLS/Xray-core/releases/download/v1.7.5/xray-windows-64.zip";
+	import inet.whttp;
+	var whttp = inet.whttp();
+	whttp.setTimeouts(8000,8000,8000);
+	whttp.beginRequest(requestUrl);
+	var re, status = whttp.send();
+	whttp.close();
+	
+	if(status === 200){
+		winform.mirrors.setItemText("正常",index,2)
+	} else {
+		winform.mirrors.setItemText("已失效",index,2)
+	}
+}
+
+
+//自绘
+winform.mirrors.onnotify = function (id,code,ptr) {
+	select(code) {
+		case 0xFFFFFFF4/*_NM_CUSTOMDRAW*/ {
+        	var lvcd = winform.mirrors.getNotifyCustomDraw (code,ptr);
+        	if ( lvcd.nmcd.dwDrawStage == 0x10001/*_CDDS_ITEMPREPAINT*/) return 0x20/*_CDRF_NOTIFYSUBITEMDRAW*/
+        	elseif ( lvcd.nmcd.dwDrawStage == 1/*_CDDS_PREPAINT*/ ) {
+            	return 0x20/*_CDRF_NOTIFYITEMDRAW*/;
+        	}
+        	elseif ( lvcd.nmcd.dwDrawStage == ( 0x10001/*_CDDS_ITEMPREPAINT*/ | 0x20000/*_CDDS_SUBITEM*/) ) {
+            	//注意这里 iSubItem 的索引自0开始（ 其他函数通常自1开始 ）
+            	//设置奇偶行不同的颜色
+            	lvcd.clrText = lvcd.nmcd.dwItemSpec % 2 ? 0x373737 : 0;
+				lvcd.clrTextBk = lvcd.nmcd.dwItemSpec % 2 ? 0xFFFFFF : 0xF5F5F5;
+            	lvcd.update ()
+            	return 0/*_CDRF_DODEFAULT*/
+        	}
+    	}
+    	case 0xFFFFFFFD/*_NM_DBLCLK*/ {
+			var nm = winform.mirrors.getNotifyMessage(code,ptr);
+			if( !nm ){
+				return;
+			}
+			var currentIdx = nm.iItem;
+			winform.mirrors.setItemText("测试中...",currentIdx,2);
+			// 有点延迟，上面设置的字才能显示
+			win.delay(1)
+			testUrl(winform,winform.mirrors.getItemText(currentIdx,1),currentIdx)
+		}
+		case 0xFFFFFFFB/*_NM_RCLICK*/  {
+			var x,y = win.getCursorPos();
+			var nm = winform.mirrors.getNotifyMessage(code,ptr);
+			if(!nm) return;
+			
+			var currentIdx = nm.iItem;
+			if(!currentIdx){
+				var popmenu = win.ui.popmenu(winform);
+				if(#config.githubMirror.mirrors){
+					popmenu.add("清空列表",function(){ 
+						clearList(); 
+					});
+					popmenu.add("测试所有节点可用性",function(){
+						winform.btnTest.oncommand();
+					})
+				} else {
+					popmenu.add("哦豁，没有节点",function(){ 
+						return; 
+					});
+				}
+				
+				// 弹出菜单
+				popmenu.popup(x,y,true);
+				return;
+			}
+			
+			var selectedItems = winform.mirrors.selected;
+			var popmenu = win.ui.popmenu(winform);
+			popmenu.add("优先使用该节点",function(){
+				if(currentIdx == 1){
+					return true; 
+				}
+
+				var tempText = winform.mirrors.getItemText(currentIdx,1);
+				var tempConfig = config.githubMirror.mirrors[currentIdx];
+				for(i=currentIdx-1;1;-1){
+					lastItemText = winform.mirrors.getItemText(i,1);
+					winform.mirrors.setItemText(lastItemText,i+1,1);
+					lastConfig = config.githubMirror.mirrors[i];
+					config.githubMirror.mirrors[i+1] = lastConfig;
+				}
+				winform.mirrors.setItemText(tempText,1,1);
+				config.githubMirror.mirrors[1] = tempConfig;
+				config.githubMirror.save();
+			})
+			popmenu.add("复制节点地址",function(){
+				import win.clip;
+				str = winform.mirrors.getItemText(currentIdx,1);
+				win.clip.write(str);
+			})
+			popmenu.add("可用性检测( 鼠标双击 )",function(){
+				acceleratorLock = true;
+				winform.mirrors.setItemText("测试中...",currentIdx,2);
+				// 有点延迟，上面设置的字才能显示
+				win.delay(1)
+				testUrl(winform,winform.mirrors.getItemText(currentIdx,1),currentIdx)
+				acceleratorLock = false;
+			})
+			popmenu.add("删除节点",function(){
+				removeMirror(selectedItems);
+			})
+			popmenu.add("清空列表",function(){
+				clearList();
+			})
+			// 弹出菜单
+			popmenu.popup(x,y,true);
+		}
+    }
+}
+
+
+var loadMirrorsToListview = function(){
+	githubMirrors = config.githubMirror.mirrors;
+	for(mirrorIndex=1;#githubMirrors;1){
+		var url = githubMirrors[mirrorIndex]['url']
+		winform.mirrors.addItem(url,mirrorIndex)
+	}
+	winform.autoAddMirrors.checked = config.githubMirror.autoAdd;
+}
+
+var addMirrors = function(){
+	if(!#config.githubMirror.mirrors){
+		import xray.githubMirror;
+		xray.githubMirror.resetgithubMirror();
+	}
+}
+
+// 节点为空时，是否自动添加节点
+autoAdd = config.githubMirror.autoAdd;
+if(autoAdd){
+	addMirrors();
+}
+
+loadMirrorsToListview();
+
+winform.btnReset.oncommand = function(id,event){
+	winform.mirrors.clear();
+	import xray.githubMirror;
+	xray.githubMirror.resetgithubMirror();
+	loadMirrorsToListview();
+	winform.msgWarn("重置Github加速节点", 1000)
+}
+
+winform.autoAddMirrors.oncommand = function(id,event){
+	config.githubMirror.autoAdd = winform.autoAddMirrors.checked;
+}
+
+winform.btnAdd.oncommand = function(id,event){
+	var url = winform.textMirror.text;
+	if(!#url){
+		winform.msgErr('请输入内容',1000);
+		return; 
+	}
+	
+	if(!..string.match(url,"^http.*\://+.*\..*")){
+		winform.msgErr('Url 格式错误', 1000)
+		return;
+	}
+	// 域名必须以 / 结尾
+	if(!..string.endWith(url,"/",false)){
+		url = ..string.concat(url,"/")
+	}
+	
+	var items = winform.mirrors.items;
+	if(#items){
+		for(i=1;#items;1){
+			existUrl = winform.mirrors.getItemText(i,1);
+			if(existUrl==url){
+				winform.msgErr('节点已存在',1000)
+				return; 
+			}
+		}
+	}
+	
+	winform.textMirror.text = '';
+	winform.mirrors.addItem(url)
+	table.push(config.githubMirror.mirrors,{"url":url})
+}
+
+
+winform.btnTest.oncommand = function(id,event){
+	var items = winform.mirrors.items;
+	if(#items){
+		winform.btnTest.disabled = true;
+		acceleratorLock = true;
+		// 真正测试前，清空状态
+		for(i=1;#items;1){
+			winform.mirrors.setItemText("",i,2);
+		}
+		for(i=1;#items;1){
+			manage.create(testUrl,winform,winform.mirrors.getItemText(i,1),i)
+			winform.mirrors.setItemText("测试中...",i,2);
+		}
+		manage.waitClose(); 
+		acceleratorLock = false;
+		winform.btnTest.disabled = false;
+	} else {
+		winform.msgErr("没有加速节点",1000)
+	}
+}
+
+//按键
+import win.ui.accelerator;
+var accelerator = win.ui.accelerator({
+	{//按下Enter键
+		vkey = '13';
+		oncommand=function(){
+			// 如果在测速，那么快捷键不起作用
+			if(acceleratorLock){
+				return;
+			}
+			winform.btnAdd.oncommand();
+		}	   
+	};
+	{ //按下DELETE键
+		vkey = '46'; 
+		oncommand = function(){
+			if(acceleratorLock){
+				return;
+			}
+			var selectedItems = winform.mirrors.selected;
+			removeMirror(selectedItems);
+		}
+	};
+},winform);
+
+winform.show();
+win.loopMessage();
+return winform;
