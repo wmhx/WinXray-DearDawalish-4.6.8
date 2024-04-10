@@ -1,4 +1,12 @@
-﻿[winXray 入门小技巧](./sub/introduce.md)   
+# 本项目说明
+
+来自: [https://github.com/DearDawalish/WinXray](https://github.com/DearDawalish/WinXray) , version: 4.6.8 , date:2023/9/15
+
+很显然，我保留的这个项目就的上述抄袭版的优化版,功能一切正常.
+--------------
+--------------
+ 
+ [winXray 入门小技巧](./sub/introduce.md)   
 [winXray 相关视频列表](https://www.youtube.com/results?search_query=winXray)  
 
 # WinXray 
