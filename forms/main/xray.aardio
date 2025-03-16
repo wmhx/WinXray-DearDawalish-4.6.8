@@ -239,6 +239,15 @@ frmXray.onStartXrayFailed = function(outboundIndex,enableRetry,outboundAddress){
 	
 }
 
+var updateSubscription = function(){	
+	var outbounds = ..table.array();
+	import xray.outbounds;
+	if(!xray.outbounds.updateSubscription()){
+		publish("uiCommand.restartxrayCore",outbounds) 
+	}
+}
+
+
 // 测延迟
 var tcping = function(frmXray,outboundIndex,outbound){ 
 	import wsock.tcp.client; 
@@ -295,7 +304,7 @@ frmXray.onTcpingFailed = function(){
 	// 不使用代理服务器时，有没有网络
 	if(inet.http.isAlive(,false)){
 		// 有网络时，自动更新订阅
-		frmXray.autoUpdateSubscription(1000);
+		frmXray.autoUpdateSubscription(10000);
 	}
 	else {
 		// 没有网时，创建一个定时器，每隔1秒执行一次匿名函数
@@ -384,7 +393,7 @@ frmXray.btnTcping.oncommand = function(id,event){
 		var manage = thread.manage(config.proxy.maxTestServers);
 		var outbounds = config.proxy.outbounds;
 		var listview = frmXray.listview;
-		
+
 		// 测速前，初始化显示内容
 		for(i=1;#items;1){
 			// 默认全部允许测速，不允许的话，需要手动勾选

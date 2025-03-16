@@ -12,9 +12,10 @@ var getRulesUrl = function(){
     	import process;
 		import inet.http;
 		import web.json;
+		import xray.githubMirror;
 		
 		var http = inet.http();
-		var response = http.get("https://api.github.com/repos/Loyalsoldier/v2ray-rules-dat/releases");
+		var response = http.get(xray.githubMirror.getMirrorUrl("https://api.github.com/repos/Loyalsoldier/v2ray-rules-dat/releases"));
 		http.close();
 		if(!response) return;
 		var data = web.json.parse(response)

@@ -10,6 +10,40 @@ namespace xray.githubMirror{
 		..table.push(githubMirror,{"url": "https://gh.ddlc.top/"});
 		..table.push(githubMirror,{"url": "https://gh.con.sh/"});
 		..table.push(githubMirror,{"url": "https://ghps.cc/"});
+		
+		var file = config.githubMirror.file : (..io.joinpath("/config/","t.html"));
+		var url = config.githubMirror.url : "https://greasyfork.org/zh-CN/scripts/412245-github-enhancement-high-speed-download";
+		
+		if(..io.exist(file)){
+			import string.html;
+			var htmlDoc = string.html( string.load(file) );
+			var tables = htmlDoc.queryEles( tagName = "table" );			
+			for i,vi  in tables{
+				var as = tables[i].queryEles( tagName = "a" ); 	
+				for k,vk in as{
+					var href = as[k].innerText()
+					if(..string.startWith(href,"htt")){
+						..table.push(githubMirror,{"url": href});
+					}
+				}
+			}
+		}else{
+			var download_mirror_file = function(url,file){
+				import inet.whttp;
+				var http = inet.whttp();				
+				var html = http.get(url);
+				http.close();
+				if(html){ string.save(file, html);}
+			}			
+			import thread;
+			thread.invoke(download_mirror_file,url,file);
+		}		
+		
+		githubMirror = ..table.unique(githubMirror) ; // 去重
+		config.githubMirror.url=url;
+		config.githubMirror.file=file;
+		config.githubMirror.note="可以自定义url，比如加入可用mirrors头来加快下载";
+		config.githubMirror.mirrors=githubMirror;
 		config.githubMirror.autoAdd = true;
 		config.githubMirror.save();
 	}
