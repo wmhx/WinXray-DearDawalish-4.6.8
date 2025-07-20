@@ -21,7 +21,7 @@ isInboundPortChanged = function(){
 	var inbounds = ..config.core.default.inbounds;
 	// 如果inbounds不是数组或者数组长度小于2，则返回true，表示端口有变化
 	// 屏蔽掉json界面后，这里应该也可以注释掉
-	if(! (..table.isArray(inbounds) && inbounds[1] && inbounds[2]) ){
+	if(! (inbounds[1] && inbounds[2]) ){
 		return true;
 	}	
 	
@@ -43,7 +43,7 @@ restart = function(editor,outbound){
     }
 
 	var inbounds = ..config.core.default[["inbounds"]];
-	if(! (..table.isArray(inbounds) && inbounds[1] ) ){
+	if(! ( inbounds[1] ) ){
 		return null,"错误的入站SOCKS代理服务器配置" 
 	}
 	if(! ( inbounds[2] ) ){
