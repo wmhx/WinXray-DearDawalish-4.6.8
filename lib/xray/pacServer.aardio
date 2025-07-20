@@ -9,7 +9,7 @@ $serverMain = ..wsock.tcp.simpleHttpServer.mainThread(
 	function(response,request,session){ 
 
 		if(request.path=="/proxy.pac"){ 
-		 
+
 			var pacData = ..string.load(pacPath);
 			var proxPorts = inboundPort.get();
 			if(!proxPorts[["socksProxy"]]){
