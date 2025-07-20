@@ -6,7 +6,7 @@ import xray.pacServer;
 
 namespace sysProxy;
 
-switch = function(mode){  
+proxySwitch = function(mode){  
 	..config.proxy.mode = mode : "direct";
 	..config.proxy.save();
   
@@ -37,24 +37,24 @@ switch = function(mode){
 } 
 
 switchToGlobalMode = function(){
-	switch("proxy") 
+	proxySwitch("proxy") 
 }
 
 switchToPacMode = function(){  
-	switch("pac") 
+	proxySwitch("pac") 
 }
 
 switchToDirectMode  = function(){ 
-	switch("direct") 
+	proxySwitch("direct") 
 }
 
 switchHotkey  = function(){ 
     var mode = ..config.proxy.mode;
 	if( mode != "pac"){
-		switch("pac") 
+		proxySwitch("pac") 
 	}
 	else {
-		switch("proxy") 
+		proxySwitch("proxy") 
 	}
 	
 	return ..config.proxy.mode;
@@ -72,7 +72,7 @@ reset = function(proxy){
 	}
 	
 	..inet.conn.setProxy();
-	switch(..config.proxy.mode); 
+	proxySwitch(..config.proxy.mode); 
 } 
 
 ..subscribe("pacServer.restarted",function(pacPort){
