@@ -16,14 +16,14 @@ write  = function(jsonPath,outbound,sockPort,httpPort){
 	}
 	
 	var currentCore = ..table.clone(..config.core.default);
-	if(! ..table.isArray(currentCore.outbounds) ){
-		return null,"错误的出站代理服务器配置" 
-	}
+	//if(! ..table.isArray(currentCore.outbounds) ){
+	//	return null,"错误的出站代理服务器配置" 
+	//}
 	
 	var inboundsInCore = currentCore.inbounds;
-	if(! ..table.isArray(inboundsInCore) ){
-		return null,"错误的入站代理服务器配置" 
-	}
+	//if(! ..table.isArray(inboundsInCore) ){
+	//	return null,"错误的入站代理服务器配置" 
+	//}
 	
 	var proxyOutboundInCore;
 	for(k,ob in currentCore.outbounds){
