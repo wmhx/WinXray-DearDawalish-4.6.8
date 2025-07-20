@@ -55,7 +55,7 @@ config.__resetDefaultCore = function(){
 		inbounds={
 			{
 				listen="127.0.0.1";
-				port=0;
+				port=1081;
 				protocol="socks";
 				settings={
 					auth="noauth";
@@ -72,7 +72,7 @@ config.__resetDefaultCore = function(){
 			}; 
 			{
 				listen="127.0.0.1";
-				port=0;
+				port=1082;
 				protocol="http";
 				settings={};
 				sniffing={
@@ -132,7 +132,7 @@ if(!config.core.default){
 if(!config.core.default.inbounds[2]){
 	config.core.default.inbounds[2]	= {
 		listen="127.0.0.1";
-		port=0;
+		port=1082;
 		protocol="http";
 		settings={};
 		sniffing={
