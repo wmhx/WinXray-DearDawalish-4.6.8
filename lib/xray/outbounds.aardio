@@ -344,7 +344,7 @@ importFromString = function(str,subscribeUrl){
 		} 
 		if(!existIndex){
 			var tUrl = ..inet.url.split(subscribeUrl); 
-			..table.push(cfgSubscribeUrls,{url=subscribeUrl;ps=tUrl ? tUrl.host : "";checked="启用"})
+			..table.push(cfgSubscribeUrls,{url=subscribeUrl;ps=tUrl ? tUrl.host : "";checked="启用"; update_time=tostring(time())})
 			..publish("uiCommand.subscriptionNew",cfgSubscribeUrls[#cfgSubscribeUrls]);
 		}  
 		else{
@@ -1104,6 +1104,7 @@ updateSubscription = function(outbondSubscribeUrlMap){
 				
 			..table.append(cfgOutbounds,impOutbounds);
 			count = count + #impOutbounds;
+			
 		}
 	}
 	
