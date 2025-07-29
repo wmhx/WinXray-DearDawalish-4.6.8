@@ -209,8 +209,8 @@ winform.btnTestSpeed.oncommand = function(id,event){
 		winform.btnTestSpeed.disabledText = null;
 		return; 	
 	}
-	
-	winform.lbCurrentProxyLocation.text = ipip;
+
+	winform.lbCurrentProxyLocation.text = ipip+" "+tostring(time());
 	
 	import process
 	process.execute(chromePath,` --proxy-server="SOCKS5://127.0.0.1:`+xray.core.socksProxyPort 
@@ -222,7 +222,7 @@ onActiveOutbound = function(address){
 	// 设置测速按钮是否可点击（address传false时不可点击）
 	winform.btnTestSpeed.disabled = !address;
 	if(type.isString(address)){
-		winform.lbCurrentProxyLocation.text = "当前活动的代理服务器：" + address;
+		winform.lbCurrentProxyLocation.text = "当前活动的代理服务器：" + address+" "+tostring(time());
 	}	
 } 
 	
